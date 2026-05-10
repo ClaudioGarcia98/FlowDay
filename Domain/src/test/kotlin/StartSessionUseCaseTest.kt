@@ -41,6 +41,7 @@ class StartSessionUseCaseTest {
 
     @Test
     fun `does not call repository startSession when one is already active`() = runTest {
+
         coEvery { repository.getActiveSession() } returns fakeSession(isActive = true)
 
         startSession(label = "Deep work")
@@ -50,6 +51,7 @@ class StartSessionUseCaseTest {
 
     @Test
     fun `succeeds and returns session id when no active session`() = runTest {
+
         coEvery { repository.getActiveSession() } returns null
         coEvery { repository.startSession(label = any()) } returns 42L
 
