@@ -73,6 +73,20 @@ how data is fetched, only that it can be.
 
 ---
 
+## Architecture decisions
+
+### JSON storage for priorities
+
+`DailyIntention` stores its `priorities` field as a JSON string in Room via a
+TypeConverter. This is acceptable here because priorities are capped at 3 short
+strings — the serialization overhead is negligible for this volume.
+
+For larger or more complex datasets this approach would be reconsidered in favor
+of a separate relational table to avoid performance and querying limitations of
+JSON string storage.
+
+---
+
 ## Testing approach
 
 Every use case has unit tests covering all decision paths — success cases, failure
@@ -98,8 +112,8 @@ code that breaks existing behaviour.
 | Module               | Status         |
 |----------------------|----------------|
 | `:core:domain`       | ✅ Complete     |
-| `:core:database`     | 🚧 In progress |
-| `:core:network`      | ⬜ Not started  |
+| `:core:database`     | ✅ Complete     |
+| `:core:network`      | 🚧 In progress |
 | `:core:data`         | ⬜ Not started  |
 | `:core:ui`           | ⬜ Not started  |
 | `:feature:session`   | ⬜ Not started  |
