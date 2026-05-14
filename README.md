@@ -85,6 +85,16 @@ For larger or more complex datasets this approach would be reconsidered in favor
 of a separate relational table to avoid performance and querying limitations of
 JSON string storage.
 
+### Database migrations
+
+The app currently uses `fallbackToDestructiveMigration()` in the Room database builder.
+This means if the schema changes and no migration is provided, Room drops and recreates
+the database instead of crashing.
+
+This is intentional during development — there are no real users and no data worth
+preserving. Before any public release this will be replaced with explicit `Migration`
+objects that preserve user data across schema versions.
+
 ---
 
 ## Testing approach
@@ -104,6 +114,27 @@ code that breaks existing behaviour.
 > This approach doesn't eliminate all bugs — UI and integration issues still require
 > manual testing — but it makes logic bugs in the domain layer practically impossible
 > to ship.
+
+## Testing Decisions
+
+### DAO Tests — AndroidTest
+
+**In-memory database**
+DAO tests use `Room.inMemoryDatabaseBuilder` instead of a real database.
+A real database persists to disk, meaning data from one test can leak into another
+and cause false failures or false passes. In-memory database lives in RAM and is
+destroyed after each test, so every test starts with a clean slate.
+
+**`Flow.first()` instead of `collect()`**
+DAO methods that return `Flow` are tested using `.first()` to collect a single emission.
+`collect()` suspends forever — it keeps listening until the Flow is cancelled, which
+would cause tests to hang indefinitely. `first()` collects one emission, cancels the
+Flow, and returns immediately.
+
+**`runTest` instead of `runBlocking`**
+Coroutine-based tests use `runTest` from `kotlinx-coroutines-test`.
+`runTest` handles virtual time and propagates uncaught exceptions correctly,
+making it the right choice for testing suspend functions and Flows.
 
 ---
 
