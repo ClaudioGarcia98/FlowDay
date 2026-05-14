@@ -75,6 +75,14 @@ how data is fetched, only that it can be.
 
 ## Architecture decisions
 
+### `DailyIntentionEntity` primary key
+
+`DailyIntentionEntity` uses `dateIso` as its primary key instead of an
+auto-increment `id`. One intention per day is a domain invariant — the date
+is the natural key. Using `dateIso` directly means Room's `@Upsert` resolves
+conflicts correctly on date, making the morning/evening update flow work
+without any extra query logic.
+
 ### JSON storage for priorities
 
 `DailyIntention` stores its `priorities` field as a JSON string in Room via a

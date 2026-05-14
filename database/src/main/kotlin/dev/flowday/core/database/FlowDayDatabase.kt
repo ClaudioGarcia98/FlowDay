@@ -19,7 +19,7 @@ import dev.flowday.core.database.util.Converters
         HabitCheckInEntity::class,
         DailyIntentionEntity::class,
     ],
-    version = 2
+    version = 3
 )
 @TypeConverters(Converters::class)
 abstract class FlowDayDatabase : RoomDatabase() {
