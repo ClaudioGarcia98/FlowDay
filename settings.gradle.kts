@@ -24,5 +24,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "FlowDay"
 include(":app")
-include(":Domain")
+include(":domain")
 include(":database")
+include(":network")
