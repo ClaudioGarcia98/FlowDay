@@ -26,7 +26,8 @@ object DatabaseModule {
             context,
             FlowDayDatabase::class.java,
             "flowday.db"
-        ).build()
+        ).fallbackToDestructiveMigration(false)
+            .build()
 
     @Provides
     fun provideSessionDao(database: FlowDayDatabase): SessionDao =
