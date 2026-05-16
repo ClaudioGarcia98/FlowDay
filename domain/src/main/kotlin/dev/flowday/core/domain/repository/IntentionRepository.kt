@@ -6,7 +6,7 @@ import java.time.LocalDate
 
 interface IntentionRepository {
 
-    fun getIntentionForDate(date: LocalDate): Flow<DailyIntention>
+    fun getIntentionForDate(date: LocalDate): Flow<DailyIntention?>
 
     suspend fun savePriorities(priorities: List<String>, date: LocalDate)
 
