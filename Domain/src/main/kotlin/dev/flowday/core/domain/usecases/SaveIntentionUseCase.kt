@@ -9,7 +9,7 @@ class SaveIntentionUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         priorities: List<String>,
-        date: LocalDate,
+        date: LocalDate = LocalDate.now(),
     ): Result<Unit> {
         if (priorities.isEmpty() || priorities.size > 3)
             return Result.failure(exception = IllegalArgumentException("Set between 1 and 3 priorities"))
