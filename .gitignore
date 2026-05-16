@@ -35,4 +35,6 @@ google-services.json
 # Kotlin
 *.class
 
+*.hprof
+
 gradle/wrapper/gradle-wrapper.jar

@@ -6,9 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "daily_intentions")
 data class DailyIntentionEntity(
 
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0L,
-
+    @PrimaryKey
     val dateIso: String,
 
     val prioritiesJson: String,
