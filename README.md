@@ -71,26 +71,25 @@ how data is fetched, only that it can be.
 | `repository/` | Interfaces — contracts for data access, no implementation                           |
 | `usecase/`    | Business rules — one class, one decision, one responsibility                        |
 
+### What `core:data` contains
+
+| Package        | Purpose                                                                              |
+|----------------|--------------------------------------------------------------------------------------|
+| `mapper/`      | Extension functions — entity → domain model conversion                               |
+| `repository/`  | Implementations of every repository interface defined in `core:domain`               |
+| `di/`          | Hilt module — binds interfaces to implementations                                    |
+
 ---
 
 ## Architecture decisions
 
-### `Weather caching`
+### Weather caching
 
 Weather is fetched once per day and cached in Room using the date as the primary key. This is
-intentional — weather serves as context on the Da*ily Intention screen, not as a real-time feed.
-Once
+intentional — weather serves as context on the Daily Intention screen, not as a real-time feed. Once
 per day is sufficient for the use case and avoids unnecessary network calls. If multiple fetches per
 day are needed in the future, the cache can be extended with a time period indicator (
 morning/afternoon) as a composite primary key.
-
-### `DailyIntentionEntity` primary key
-
-`DailyIntentionEntity` uses `dateIso` as its primary key instead of an
-auto-increment `id`. One intention per day is a domain invariant — the date
-is the natural key. Using `dateIso` directly means Room's `@Upsert` resolves
-conflicts correctly on date, making the morning/evening update flow work
-without any extra query logic.
 
 ### JSON storage for priorities
 
@@ -111,6 +110,37 @@ the database instead of crashing.
 This is intentional during development — there are no real users and no data worth
 preserving. Before any public release this will be replaced with explicit `Migration`
 objects that preserve user data across schema versions.
+
+### `core:data` uses `android.library` not `kotlin.jvm`
+
+`core:domain` is pure Kotlin and uses the `kotlin.jvm` plugin. `core:data` cannot
+do the same because it uses Hilt for dependency injection. Hilt requires the Android
+runtime, so any module that uses it must be an `android.library` module.
+
+### Shared weather code mapping
+
+The mapping from Open-Meteo weather codes to `WeatherCondition` enum values was
+extracted from `WeatherResponseDto.toWeather()` into a standalone
+`mapWeatherCodeToCondition(code: Int)` function in `core:network`. Both the network
+mapper and the database cache mapper in `core:data` need the same logic — extracting
+it avoids duplication without creating a new shared module or violating the existing
+dependency direction.
+
+### Analytics computed entirely in memory
+
+`AnalyticsRepositoryImpl` fetches all sessions and check-ins and filters them in
+memory per week rather than adding date-range queries to the DAOs. The dataset is
+local-only and bounded — a user will never accumulate enough data to make this a
+performance problem. Keeping the DAO layer simple and pushing computation into the
+repository keeps the database layer clean and avoids over-engineering.
+
+### `saveEveningReflection` fetches before upserting
+
+`IntentionDao` uses `@Upsert` — saving a reflection for a date that already has
+priorities would wipe those priorities if the entity were reconstructed from scratch.
+`saveEveningReflection` fetches the existing entity first via a one-shot suspend
+query, copies it with the new reflection, and then upserts. If no intention exists
+for that date the operation is a no-op — there is nothing to reflect on.
 
 ---
 
@@ -157,16 +187,16 @@ making it the right choice for testing suspend functions and Flows.
 
 ## Project status
 
-| Module               | Status         |
-|----------------------|----------------|
-| `:core:domain`       | ✅ Complete     |
-| `:core:database`     | ✅ Complete     |
-| `:core:network`      | 🚧 In progress |
-| `:core:data`         | ⬜ Not started  |
-| `:core:ui`           | ⬜ Not started  |
-| `:feature:session`   | ⬜ Not started  |
-| `:feature:habits`    | ⬜ Not started  |
-| `:feature:analytics` | ⬜ Not started  |
+| Module               | Status          |
+|----------------------|-----------------|
+| `:core:domain`       | ✅ Complete      |
+| `:core:database`     | ✅ Complete      |
+| `:core:network`      | ✅ Complete      |
+| `:core:data`         | 🚧 In progress  |
+| `:core:ui`           | ⬜ Not started   |
+| `:feature:session`   | ⬜ Not started   |
+| `:feature:habits`    | ⬜ Not started   |
+| `:feature:analytics` | ⬜ Not started   |
 
 ---
 
