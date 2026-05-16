@@ -11,6 +11,7 @@ import dev.flowday.core.database.FlowDayDatabase
 import dev.flowday.core.database.dao.HabitDao
 import dev.flowday.core.database.dao.IntentionDao
 import dev.flowday.core.database.dao.SessionDao
+import dev.flowday.core.database.dao.WeatherDao
 import javax.inject.Singleton
 
 @Module
@@ -40,4 +41,8 @@ object DatabaseModule {
     @Provides
     fun provideIntentionDao(database: FlowDayDatabase): IntentionDao =
         database.intentionDao()
+
+    @Provides
+    fun provideWeatherDao(database: FlowDayDatabase): WeatherDao =
+        database.weatherDao()
 }

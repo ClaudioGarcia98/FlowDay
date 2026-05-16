@@ -75,6 +75,15 @@ how data is fetched, only that it can be.
 
 ## Architecture decisions
 
+### `Weather caching`
+
+Weather is fetched once per day and cached in Room using the date as the primary key. This is
+intentional — weather serves as context on the Da*ily Intention screen, not as a real-time feed.
+Once
+per day is sufficient for the use case and avoids unnecessary network calls. If multiple fetches per
+day are needed in the future, the cache can be extended with a time period indicator (
+morning/afternoon) as a composite primary key.
+
 ### `DailyIntentionEntity` primary key
 
 `DailyIntentionEntity` uses `dateIso` as its primary key instead of an
