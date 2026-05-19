@@ -9,4 +9,6 @@ fun WeatherCacheEntity.toWeather(): Weather {
         temperature = temperature,
         condition = mapWeatherCodeToCondition(weatherCode)
     )
+
+
 }

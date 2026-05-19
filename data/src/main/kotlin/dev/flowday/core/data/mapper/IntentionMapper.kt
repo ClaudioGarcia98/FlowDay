@@ -8,7 +8,6 @@ import java.time.LocalDate
 
 fun DailyIntentionEntity.toDailyIntention(): DailyIntention {
     return DailyIntention(
-        id = 0L,
         date = LocalDate.parse(dateIso),
         priorities = Json.decodeFromString<List<String>>(prioritiesJson),
         eveningReflection = eveningReflection,
