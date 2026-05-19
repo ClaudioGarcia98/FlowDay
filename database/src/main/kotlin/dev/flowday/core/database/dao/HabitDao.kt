@@ -20,6 +20,9 @@ interface HabitDao {
     @Query("SELECT * FROM habit_check_ins WHERE habitId  = :habitId")
     fun getCheckInsForHabit(habitId: Long): Flow<List<HabitCheckInEntity>>
 
+    @Query("SELECT * FROM habit_check_ins")
+    fun getAllCheckInsStream(): Flow<List<HabitCheckInEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: HabitEntity): Long
 

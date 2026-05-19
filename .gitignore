@@ -16,6 +16,7 @@ build/
 local.properties
 *.properties
 !gradle.properties
+!gradle/wrapper/gradle-wrapper.properties
 !gradle/libs.versions.toml
 
 # Android Studio
@@ -36,5 +37,3 @@ google-services.json
 *.class
 
 *.hprof
-
-gradle/wrapper/gradle-wrapper.jar
