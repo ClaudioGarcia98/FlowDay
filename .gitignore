@@ -16,6 +16,7 @@ build/
 local.properties
 *.properties
 !gradle.properties
+!gradle/wrapper/gradle-wrapper.properties
 !gradle/libs.versions.toml
 
 # Android Studio
