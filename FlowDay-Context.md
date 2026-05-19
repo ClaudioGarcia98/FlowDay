@@ -37,24 +37,24 @@ FlowDay is a local-first personal productivity app built around three daily ques
 
 ## Tech Stack
 
-| Area | Technology | Version |
-|---|---|---|
-| Language | Kotlin | 2.3.21 |
-| UI | Jetpack Compose + Material 3 | BOM 2026.05.00 |
-| Architecture | Clean Architecture + MVI + Multi-module | — |
-| DI | Hilt | 2.59.2 |
-| Async | Coroutines + Flow | 1.11.0 |
-| Database | Room | 2.8.4 |
-| Background | ForegroundService + WorkManager | — |
-| Widget | Jetpack Glance | — |
-| Network | Retrofit + OkHttp + Kotlin Serialization | Retrofit 3.0.0 / OkHttp 4.12.0 / KotlinX Serialization 1.11.0 |
-| Testing | JUnit4 + MockK + Turbine + MockWebServer | — |
-| CI | GitHub Actions | — |
-| AGP | Android Gradle Plugin | 9.2.1 |
-| KSP | Kotlin Symbol Processing | 2.3.7 |
-| Min SDK | — | 26 |
-| Compile SDK | — | 36 |
-| Java | — | VERSION_17 |
+| Area         | Technology                              | Version                                              |
+|--------------|-----------------------------------------|------------------------------------------------------|
+| Language     | Kotlin                                  | 2.3.21                                               |
+| UI           | Jetpack Compose + Material 3            | BOM 2026.05.00                                       |
+| Architecture | Clean Architecture + MVI + Multi-module | —                                                    |
+| DI           | Hilt                                    | 2.59.2                                               |
+| Async        | Coroutines + Flow                       | 1.11.0                                               |
+| Database     | Room                                    | 2.8.4                                                |
+| Background   | ForegroundService + WorkManager         | —                                                    |
+| Widget       | Jetpack Glance                          | —                                                    |
+| Network      | Retrofit + OkHttp + Kotlin Serialization| Retrofit 3.0.0 / OkHttp 4.12.0 / KSerialization 1.11.0 |
+| Testing      | JUnit4 + MockK + Turbine + MockWebServer| —                                                    |
+| CI           | GitHub Actions                          | —                                                    |
+| AGP          | Android Gradle Plugin                   | 9.2.1                                                |
+| KSP          | Kotlin Symbol Processing                | 2.3.7                                                |
+| Min SDK      | —                                       | 26                                                   |
+| Compile SDK  | —                                       | 36                                                   |
+| Java         | —                                       | VERSION_17                                           |
 
 ---
 
@@ -62,39 +62,53 @@ FlowDay is a local-first personal productivity app built around three daily ques
 
 ```
 FlowDay/
-├── app/                          Entry point · MainActivity · NavHost
-├── core/
-│   ├── domain/                   Pure Kotlin — zero Android dependency
-│   ├── database/                 Room — entities · DAOs · TypeConverters · Hilt module
-│   ├── network/                  Retrofit — Weather API · DTOs · caching · Hilt module
-│   ├── data/                     Repository implementations · mappers · Hilt bindings
-│   └── ui/                       Design system · shared Compose components
+├── app/               Entry point · MainActivity · NavHost
+├── domain/            Pure Kotlin — zero Android dependency
+├── database/          Room — entities · DAOs · TypeConverters · Hilt module
+├── network/           Retrofit — Weather API · DTOs · caching · Hilt module
+├── data/              Repository implementations · mappers · Hilt bindings
+├── ui/                Design system · shared Compose components
 └── feature/
-    ├── session/                  Focus timer screen
-    ├── habits/                   Habits screen
-    └── analytics/                Analytics dashboard screen
+    ├── session/        Focus timer screen
+    ├── habits/         Habits screen
+    └── analytics/      Analytics dashboard screen
+```
+
+### Gradle module paths
+
+```
+:app
+:domain
+:database
+:network
+:data
+:ui
+:feature:session
+:feature:habits
+:feature:analytics
 ```
 
 ---
 
 ## Module Status
 
-| Module | Status |
-|---|---|
-| `:core:domain` | ✅ Complete |
-| `:core:database` | ✅ Complete |
-| `:core:network` | ✅ Complete |
-| `:core:data` | ✅ Complete |
-| `:core:ui` | ⬜ Not started |
-| `:feature:session` | ⬜ Not started |
-| `:feature:habits` | ⬜ Not started |
-| `:feature:analytics` | ⬜ Not started |
+| Module               | Status          |
+|----------------------|-----------------|
+| `:domain`            | ✅ Complete      |
+| `:database`          | ✅ Complete      |
+| `:network`           | ✅ Complete      |
+| `:data`              | ✅ Complete      |
+| CI (GitHub Actions)  | ✅ Complete      |
+| `:ui`                | ⬜ Not started   |
+| `:feature:session`   | ⬜ Not started   |
+| `:feature:habits`    | ⬜ Not started   |
+| `:feature:analytics` | ⬜ Not started   |
 
 ---
 
-## core:domain — Complete
+## :domain — Complete
 
-**Package:** `dev.flowday.core.domain`
+**Package:** `dev.flowday.domain`  
 **Plugin:** `id("org.jetbrains.kotlin.jvm")` — pure Kotlin, zero Android imports
 
 ### Models
@@ -115,7 +129,7 @@ WeeklyStats         // weekStart, totalFocusSeconds, sessionCount, habitCompleti
                     // NEVER stored — computed at runtime from sessions + check-ins
 
 Weather             // temperature (Double), condition (WeatherCondition)
-                    // NEVER stored in domain — cached in core:database as WeatherCacheEntity
+                    // NEVER stored in domain — cached in :database as WeatherCacheEntity
 
 WeatherCondition    // enum: CLEAR_SKY, PARTLY_CLOUDY, FOG, RAIN, SNOW, SHOWERS, THUNDERSTORM, UNKNOWN
 ```
@@ -173,7 +187,7 @@ Intention:
 
 - Use cases return `Result<T>` — failure visible in type signature, not hidden exceptions
 - `operator fun invoke()` on all use cases — callable like functions
-- Repository interfaces in domain, implementations in `core:data`
+- Repository interfaces in `:domain`, implementations in `:data`
 - WeeklyStats and streak computed at runtime — never stored in database
 - `@Inject constructor` on use cases — `javax.inject:javax.inject:1` dependency
 
@@ -211,9 +225,9 @@ SaveIntentionUseCaseTest
 
 ---
 
-## core:database — Complete
+## :database — Complete
 
-**Package:** `dev.flowday.core.database`
+**Package:** `dev.flowday.database`  
 **Plugins:** `android.library` + `ksp` + `hilt` + `room`
 
 ### Entities
@@ -255,11 +269,9 @@ WeatherCacheEntity          table: weather_cache
 
 ### Database Version
 
-Current version: **4**
-
-Version 4 added `WeatherCacheEntity` for weather caching.
-
-`fallbackToDestructiveMigration()` is used in `DatabaseModule` during development — acceptable while there are no real users. Must be replaced with proper `Migration` objects before any public release to avoid wiping user data on schema changes.
+Current version: **4**  
+Version 4 added `WeatherCacheEntity` for weather caching.  
+`fallbackToDestructiveMigration()` used during development — must be replaced with proper `Migration` objects before any public release.
 
 ### DAOs
 
@@ -277,7 +289,7 @@ HabitDao
     getHabitsStream(): Flow<List<HabitEntity>>
     getCheckInsForDate(date: String): Flow<List<HabitCheckInEntity>>
     getCheckInsForHabit(habitId: Long): Flow<List<HabitCheckInEntity>>
-    getAllCheckInsStream(): Flow<List<HabitCheckInEntity>>   // added for analytics computation
+    getAllCheckInsStream(): Flow<List<HabitCheckInEntity>>   // for analytics computation
     insertHabit(habit: HabitEntity): Long
     insertCheckIn(checkIn: HabitCheckInEntity)
     undoCheckIn(habitId: Long, date: String)
@@ -285,7 +297,7 @@ HabitDao
 
 IntentionDao
     getIntentionForDate(date: String): Flow<DailyIntentionEntity?>
-    getIntentionForDateOnce(date: String): DailyIntentionEntity?   // added for saveEveningReflection
+    getIntentionForDateOnce(date: String): DailyIntentionEntity?   // for saveEveningReflection
     getIntentionsInRangeStream(startDateIso: String, endDateIso: String): Flow<List<DailyIntentionEntity>>
     upsertIntention(intention: DailyIntentionEntity)
     deleteIntention(intention: DailyIntentionEntity)
@@ -318,7 +330,6 @@ abstract class FlowDayDatabase : RoomDatabase()
 ### DatabaseModule (Hilt)
 
 ```kotlin
-// di/DatabaseModule.kt
 @Module @InstallIn(SingletonComponent::class)
 object DatabaseModule
     @Provides @Singleton provideDatabase(context): FlowDayDatabase
@@ -331,15 +342,15 @@ object DatabaseModule
 
 - Timestamps as epoch seconds (Long) — TypeConverter handles Instant conversion
 - Dates as ISO strings ("2025-05-12") — avoids timezone complexity
-- Priorities as JSON string — acceptable for max 3 short strings, documented in README
+- Priorities as JSON string — acceptable for max 3 short strings
 - Foreign key + CASCADE on HabitCheckIn — orphaned check-ins impossible
 - Index on habitId — prevents full table scan on habit deletion
 - Schema export enabled — stored at `database/schemas/.../1.json`, committed to git
 - minSdk raised to 26 — required for java.time.Instant without desugaring
-- `getAllCheckInsStream()` added to HabitDao — needed by AnalyticsRepositoryImpl to compute weekly habit completion rate across all habits without a per-habit query loop
-- `getIntentionForDateOnce()` added to IntentionDao — needed by `saveEveningReflection` to fetch the existing entity as a one-shot suspend call so priorities can be preserved during an upsert; the existing Flow query cannot be used inside a suspend function without collecting
+- `getAllCheckInsStream()` added to HabitDao — needed by AnalyticsRepositoryImpl to compute weekly habit completion rate without a per-habit query loop
+- `getIntentionForDateOnce()` added to IntentionDao — needed by `saveEveningReflection` to fetch existing entity as a one-shot suspend call; the existing Flow query cannot be used inside a suspend function without collecting
 
-### DAO Tests — In Progress
+### DAO Tests — All Passing
 
 ```
 SessionDaoTest      — in-memory Room database · insert/query/delete/active session
@@ -349,23 +360,23 @@ IntentionDaoTest    — upsert behaviour · query by date
 
 ---
 
-## core:network — Complete
+## :network — Complete
 
-**Package:** `dev.flowday.core.network`
+**Package:** `dev.flowday.network`  
 **Plugins:** `android.library` + `ksp` + `hilt` + `kotlin-serialization`
 
 ### Purpose
 
 Fetches current weather from Open-Meteo and surfaces it as context on the Daily Intention screen. Demonstrates a full production-grade network layer for portfolio and interviews.
 
-**Why weather?** Fits the local-first philosophy — network is additive, not required. App works fully offline; weather is a nice-to-have context layer that forces real implementation of every network pattern interviewers look for.
+**Why weather?** Fits the local-first philosophy — network is additive, not required. The app works fully offline; weather is a nice-to-have context layer that forces real implementation of every network pattern interviewers look for.
 
 **Why Open-Meteo?** Free, no API key, no account required. Real REST API with structured JSON responses.
 
 ### Structure
 
 ```
-core/network/
+network/
 ├── api/
 │   └── WeatherApiService.kt        // Retrofit interface
 ├── dto/
@@ -414,7 +425,7 @@ fun mapWeatherCodeToCondition(code: Int): WeatherCondition
 // 0 → CLEAR_SKY, 1-3 → PARTLY_CLOUDY, 45-48 → FOG,
 // 51-67 → RAIN, 71-77 → SNOW, 80-82 → SHOWERS,
 // 95-99 → THUNDERSTORM, else → UNKNOWN
-// extracted as standalone function — shared with core:data WeatherMapper
+// extracted as standalone function — shared with :data WeatherMapper
 ```
 
 ### NetworkModule
@@ -437,7 +448,7 @@ object NetworkModule
 
 ### Key Decisions
 
-- `mapWeatherCodeToCondition()` extracted from `WeatherResponseDto.toWeather()` into a standalone package-level function — `core:data` needs the same mapping logic for `WeatherCacheEntity → Weather` conversion; extracting avoids duplication without creating a shared module outside the existing architecture
+- `mapWeatherCodeToCondition()` extracted as a standalone package-level function — `:data` needs the same mapping logic for `WeatherCacheEntity → Weather` conversion; extracting avoids duplication without creating a shared module outside the existing architecture
 
 ### Tests — All Passing
 
@@ -461,25 +472,25 @@ WeatherApiServiceTest
 
 ---
 
-## core:data — Complete
+## :data — Complete
 
-**Package:** `dev.flowday.core.data`
+**Package:** `dev.flowday.data`  
 **Plugins:** `android.library` + `ksp` + `hilt` + `kotlin-serialization`
 
 ### Purpose
 
-Implements the repository interfaces defined in `core:domain`. Sits between the domain layer and the data sources (`core:database`, `core:network`). Contains mappers to convert entities and DTOs to domain models.
+Implements the repository interfaces defined in `:domain`. Sits between the domain layer and the data sources (`:database`, `:network`). Contains mappers to convert entities and DTOs to domain models.
 
 ### Dependencies
 
-- `:core:domain` — repository interfaces and domain models
-- `:core:database` — DAOs and entities
-- `:core:network` — WeatherApiService and mapWeatherCodeToCondition
+- `:domain` — repository interfaces and domain models
+- `:database` — DAOs and entities
+- `:network` — WeatherApiService and mapWeatherCodeToCondition
 
 ### Structure
 
 ```
-core/data/
+data/
 ├── di/
 │   └── DataModule.kt               // Hilt — binds repository interfaces to implementations
 ├── mapper/
@@ -520,7 +531,7 @@ fun DailyIntentionEntity.toDailyIntention(): DailyIntention
 
 // WeatherMapper.kt
 fun WeatherCacheEntity.toWeather(): Weather
-// weatherCode Int → WeatherCondition via mapWeatherCodeToCondition() from core:network
+// weatherCode Int → WeatherCondition via mapWeatherCodeToCondition() from :network
 ```
 
 ### Repository Implementations
@@ -561,16 +572,16 @@ WeatherRepositoryImpl(private val weatherDao: WeatherDao, private val weatherApi
 
 ### Key Decisions
 
-- `android.library` plugin instead of `kotlin.jvm` — Hilt requires the Android runtime; any module using Hilt must be an Android library module
-- No Room, Retrofit, or Serialization direct dependencies in `build.gradle.kts` — those are encapsulated in `core:database` and `core:network`; `core:data` only depends on the module, not the libraries directly. Serialization added as an exception because `IntentionRepositoryImpl` serializes priorities to JSON directly
+- `android.library` plugin instead of `kotlin.jvm` — Hilt requires the Android runtime
+- No Room, Retrofit, or Serialization direct dependencies — those are encapsulated in `:database` and `:network`; `:data` only depends on the module. Serialization is an exception because `IntentionRepositoryImpl` serializes priorities to JSON directly
 - `LocalDate.toString()` for date → String conversion — produces ISO format `"2025-05-12"` by default, matching the format stored in the database
 - `Instant.now().epochSecond` for timestamps — consistent with how entities store time throughout the project
 - Streak fields hardcoded to 0 in `HabitMapper` — streaks are computed at runtime from check-ins, never stored; the mapper has no access to check-in history
-- `id = 0L` in `IntentionMapper` — `DailyIntentionEntity` uses `dateIso` as primary key; the domain model has `id: Long = 0` as a default, so 0L is the correct value to pass
-- `combine` with three Flows in `AnalyticsRepositoryImpl` — analytics computation requires sessions, check-ins, and habit count simultaneously; `combine` re-emits whenever any source changes, keeping the dashboard reactive
-- All check-ins fetched in memory for analytics rather than adding a range query to `HabitDao` — dataset is local-only and bounded; acceptable for this use case, avoids over-engineering the DAO layer
-- `saveEveningReflection` fetches existing entity before upserting — preserves priorities written earlier in the day; without this, upserting with empty priorities would wipe the morning intention
-- `result ?: return` early exit in `saveEveningReflection` — if no intention exists for the date, there is nothing to add a reflection to; silently doing nothing is the correct behaviour
+- `id = 0L` in `IntentionMapper` — `DailyIntentionEntity` uses `dateIso` as primary key; the domain model has `id: Long = 0` as a default
+- `combine` with three Flows in `AnalyticsRepositoryImpl` — analytics computation requires sessions, check-ins, and habit count simultaneously; `combine` re-emits whenever any source changes
+- All check-ins fetched in memory for analytics — dataset is local-only and bounded; acceptable for this use case
+- `saveEveningReflection` fetches before upserting — preserves priorities written earlier in the day
+- `result ?: return` early exit in `saveEveningReflection` — if no intention exists for the date, silently doing nothing is the correct behaviour
 
 ### Tests — All Passing
 
@@ -623,37 +634,76 @@ Repository Tests
 
 ---
 
+## CI/CD
+
+GitHub Actions runs on every push to `feature/claudio/**` and every PR targeting `develop` or `master`.
+
+### What runs on every push
+
+- Unit tests — `:domain`, `:network`, `:data`
+- Debug build — confirms the full project compiles
+
+### What does NOT run on CI
+
+DAO tests (`:database` module) require an Android emulator. Run locally before pushing.
+
+### Workflow file
+
+`.github/workflows/ci.yml`
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches:
+      - 'feature/claudio/**'
+      - develop
+      - master
+  pull_request:
+    branches:
+      - develop
+      - master
+
+jobs:
+  unit-tests:
+    name: Unit Tests + Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/libs.versions.toml') }}
+      - run: chmod +x gradlew
+      - run: ./gradlew :domain:test :network:test :data:test --stacktrace
+      - run: ./gradlew assembleDebug --stacktrace
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: '**/build/reports/tests/'
+```
+
+---
+
 ## Production Readiness
 
 Required before the app is considered portfolio-complete.
 
-### ProGuard / R8
+**ProGuard / R8** — `proguard-rules.pro` must include rules for Retrofit (keep service interfaces), Kotlin Serialization (keep serializable classes), and Hilt (handled by plugin, verify on release build).
 
-`proguard-rules.pro` must include rules for:
-- Retrofit — keep service interfaces
-- Kotlin Serialization — keep serializable classes
-- Hilt — handled by plugin, verify on release build
+**Baseline Profiles** — Improves startup time by pre-compiling critical code paths. Added in `:app` module using `androidx.profileinstaller`. Simple to add, strong signal to interviewers that you think about performance.
 
-### Baseline Profiles
+**Accessibility** — Content descriptions on all icon buttons and image components. Minimum touch target 48dp enforced via Compose semantics. Tested with TalkBack on device.
 
-- Improves startup time by pre-compiling critical code paths
-- Added in `:app` module using `androidx.profileinstaller`
-- Simple to add, strong signal to interviewers that you think about performance
-
-### Accessibility
-
-- Content descriptions on all icon buttons and image components
-- Minimum touch target — 48dp enforced via Compose semantics
-- Tested with TalkBack on device
-
-### README
-
-The README is what interviewers read before they read any code. Must include:
-- App description and screenshots
-- Architecture diagram (module graph)
-- Key technical decisions and why
-- How to build and run
-- Known limitations / future improvements
+**README** — The README is what interviewers read before they read any code. Must include app description and screenshots, architecture diagram (module graph), key technical decisions and why, how to build and run, and known limitations / future improvements.
 
 ---
 
@@ -693,8 +743,8 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 - Root `build.gradle.kts` declares all plugins with `apply false`
 - Submodules apply plugins without version
 - `ksp()` used for Room compiler and Hilt compiler — not `implementation()`
-- `core:domain` uses `kotlin.jvm` plugin — NOT `android.library`
-- `core:data` uses `android.library` — required by Hilt
+- `:domain` uses `kotlin.jvm` plugin — NOT `android.library`
+- `:data` uses `android.library` — required by Hilt
 
 ### gradle.properties — performance settings
 
@@ -734,9 +784,10 @@ refactor:  code restructure without behaviour change
 ### Completed branches / PRs
 
 ```
-feature/claudio/domain-tests   → merged to develop
-feature/claudio/core-database  → merged to develop
-feature/claudio/core-network   → merged to develop
+feature/claudio/domain-tests      → merged to develop
+feature/claudio/core-database     → merged to develop
+feature/claudio/core-network      → merged to develop
+feature/claudio/start-data-module → merged to develop (includes CI setup)
 ```
 
 ### Current branch
@@ -766,9 +817,9 @@ feature/claudio/core-data   ← in progress
 ## Architecture Principles
 
 - Domain layer = pure Kotlin, no Android, testable on JVM
-- Repository interfaces in domain, implementations in `core:data`
+- Repository interfaces in `:domain`, implementations in `:data`
 - DAOs return entities, never domain models
-- Mappers in `core:data` convert entity ↔ domain model
+- Mappers in `:data` convert entity ↔ domain model
 - Use cases contain decisions — if no decision, call repository directly from ViewModel
 - `Result<T>` for operations that can fail — failure visible in type
 - `NetworkResult<T>` for network operations — Loading / Success / Error
