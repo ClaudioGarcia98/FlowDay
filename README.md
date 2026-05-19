@@ -146,8 +146,8 @@ for that date the operation is a no-op — there is nothing to reflect on.
 
 ## Testing approach
 
-Every use case has unit tests covering all decision paths — success cases, failure
-cases, and edge cases.
+Every use case and repository implementation has unit tests covering all decision
+paths — success cases, failure cases, and edge cases.
 
 Mocks replace real implementations so tests run on the JVM with no Android dependency,
 completing in under 5 seconds.
@@ -159,8 +159,8 @@ The CI pipeline runs the full test suite on every push, making it impossible to 
 code that breaks existing behaviour.
 
 > This approach doesn't eliminate all bugs — UI and integration issues still require
-> manual testing — but it makes logic bugs in the domain layer practically impossible
-> to ship.
+> manual testing — but it makes logic bugs in the domain and data layers practically
+> impossible to ship.
 
 ## Testing Decisions
 
@@ -183,6 +183,12 @@ Coroutine-based tests use `runTest` from `kotlinx-coroutines-test`.
 `runTest` handles virtual time and propagates uncaught exceptions correctly,
 making it the right choice for testing suspend functions and Flows.
 
+### Repository Tests — Unit Tests with MockK
+
+Repository implementations are tested with MockK — DAOs and API services are mocked,
+never real implementations. Turbine is used for Flow assertions. Each test covers one
+behaviour: cache hit, cache miss, network failure, empty state, filtering correctness.
+
 ---
 
 ## Project status
@@ -192,7 +198,7 @@ making it the right choice for testing suspend functions and Flows.
 | `:core:domain`       | ✅ Complete      |
 | `:core:database`     | ✅ Complete      |
 | `:core:network`      | ✅ Complete      |
-| `:core:data`         | 🚧 In progress  |
+| `:core:data`         | ✅ Complete      |
 | `:core:ui`           | ⬜ Not started   |
 | `:feature:session`   | ⬜ Not started   |
 | `:feature:habits`    | ⬜ Not started   |

@@ -84,7 +84,7 @@ FlowDay/
 | `:core:domain` | ✅ Complete |
 | `:core:database` | ✅ Complete |
 | `:core:network` | ✅ Complete |
-| `:core:data` | 🚧 In progress |
+| `:core:data` | ✅ Complete |
 | `:core:ui` | ⬜ Not started |
 | `:feature:session` | ⬜ Not started |
 | `:feature:habits` | ⬜ Not started |
@@ -461,7 +461,7 @@ WeatherApiServiceTest
 
 ---
 
-## core:data — In Progress
+## core:data — Complete
 
 **Package:** `dev.flowday.core.data`
 **Plugins:** `android.library` + `ksp` + `hilt` + `kotlin-serialization`
@@ -571,6 +571,55 @@ WeatherRepositoryImpl(private val weatherDao: WeatherDao, private val weatherApi
 - All check-ins fetched in memory for analytics rather than adding a range query to `HabitDao` — dataset is local-only and bounded; acceptable for this use case, avoids over-engineering the DAO layer
 - `saveEveningReflection` fetches existing entity before upserting — preserves priorities written earlier in the day; without this, upserting with empty priorities would wipe the morning intention
 - `result ?: return` early exit in `saveEveningReflection` — if no intention exists for the date, there is nothing to add a reflection to; silently doing nothing is the correct behaviour
+
+### Tests — All Passing
+
+```
+Mapper Tests
+    SessionMapperTest       — entity → domain model · Long → Instant conversion
+    HabitMapperTest         — HabitEntity → Habit · HabitCheckInEntity → HabitCheckIn · streak hardcoded to 0
+    IntentionMapperTest     — prioritiesJson → List<String> · dateIso → LocalDate · id hardcoded to 0L
+    WeatherMapperTest       — weatherCode → WeatherCondition via mapWeatherCodeToCondition()
+
+Repository Tests
+    SessionRepositoryImplTest (6 tests)
+        getSessionsStream returns mapped sessions
+        getTodaySessionsStream returns today sessions
+        getActiveSession returns null when no active session
+        getActiveSession returns mapped active session
+        startSession calls dao with correct entity
+        deleteSession delegates to dao
+
+    HabitRepositoryImplTest (7 tests)
+        getHabitsStream returns mapped habits
+        getCheckInsForDate returns mapped check-ins
+        getCheckInsForHabit returns mapped check-ins
+        createHabit calls dao with correct entity
+        checkIn calls dao with correct entity
+        undoCheckIn delegates to dao with date string
+        deleteHabit delegates to dao
+
+    IntentionRepositoryImplTest (5 tests)
+        getIntentionForDate returns today mapped intention
+        getIntentionForDate returns null when dao emits null
+        savePriorities calls dao with correct entity
+        saveEveningReflection calls dao with updated reflection
+        saveEveningReflection does nothing when no intention exists
+
+    WeatherRepositoryImplTest (4 tests)
+        cache exists and is today returns cached weather
+        cache miss fetches from network inserts entity returns mapped weather
+        network fails stale cache exists returns stale cache
+        network fails no cache returns null
+
+    AnalyticsRepositoryImplTest (6 tests)
+        returns correct sum of completed sessions
+        returns 0 when no sessions are completed
+        returns correct WeeklyStats for a week with sessions and check-ins
+        returns 0 habit completion rate when no habits exist
+        sessions outside the week are excluded
+        best focus day is the day with most focus seconds
+```
 
 ---
 
