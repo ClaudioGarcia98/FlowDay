@@ -36,5 +36,3 @@ google-services.json
 *.class
 
 *.hprof
-
-gradle/wrapper/gradle-wrapper.jar
