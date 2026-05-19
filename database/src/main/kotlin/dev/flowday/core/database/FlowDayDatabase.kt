@@ -6,10 +6,12 @@ import androidx.room.TypeConverters
 import dev.flowday.core.database.dao.HabitDao
 import dev.flowday.core.database.dao.IntentionDao
 import dev.flowday.core.database.dao.SessionDao
+import dev.flowday.core.database.dao.WeatherDao
 import dev.flowday.core.database.entity.DailyIntentionEntity
 import dev.flowday.core.database.entity.FocusSessionEntity
 import dev.flowday.core.database.entity.HabitCheckInEntity
 import dev.flowday.core.database.entity.HabitEntity
+import dev.flowday.core.database.entity.WeatherCacheEntity
 import dev.flowday.core.database.util.Converters
 
 @Database(
@@ -18,12 +20,14 @@ import dev.flowday.core.database.util.Converters
         HabitEntity::class,
         HabitCheckInEntity::class,
         DailyIntentionEntity::class,
+        WeatherCacheEntity::class,
     ],
-    version = 1
+    version = 4
 )
 @TypeConverters(Converters::class)
 abstract class FlowDayDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
     abstract fun habitDao(): HabitDao
     abstract fun intentionDao(): IntentionDao
+    abstract fun weatherDao(): WeatherDao
 }

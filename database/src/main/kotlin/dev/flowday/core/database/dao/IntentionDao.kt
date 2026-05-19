@@ -19,6 +19,9 @@ interface IntentionDao {
         endDateIso: String
     ): Flow<List<DailyIntentionEntity>>
 
+    @Query("SELECT * FROM daily_intentions WHERE dateIso = :date")
+    suspend fun getIntentionForDateOnce(date: String): DailyIntentionEntity?
+
     @Upsert
     suspend fun upsertIntention(intention: DailyIntentionEntity)
 

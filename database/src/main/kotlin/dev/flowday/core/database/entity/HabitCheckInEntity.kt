@@ -18,7 +18,10 @@ import androidx.room.PrimaryKey
     /*Without this,
       every time a habit is deleted Room does a full table scan to find matching check-ins,
       with this is instant*/
-    indices = [Index(value = ["habitId"])]
+    indices = [
+        Index(value = ["habitId"]),
+        Index(value = ["habitId", "dateIso"], unique = true)
+    ]
 )
 data class HabitCheckInEntity(
 

@@ -28,9 +28,10 @@ android {
 
 dependencies {
     // Domain — needed to map entities to domain models
-    implementation(project(":Domain"))
+    implementation(project(":domain"))
 
     // Room
+    androidTestImplementation(libs.room.testing)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
@@ -40,6 +41,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     // Coroutines
+    androidTestImplementation(libs.kotlinx.coroutines.test)
     implementation(libs.kotlinx.coroutines.core)
 
     // Testing
