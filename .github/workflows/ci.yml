@@ -40,7 +40,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests
-        run: ./gradlew :core:domain:test :core:network:test :core:data:test --stacktrace
+        run: ./gradlew :domain:test :network:test :data:test --stacktrace
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
