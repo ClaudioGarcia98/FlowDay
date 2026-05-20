@@ -1,7 +1,7 @@
 import app.cash.turbine.test
-import dev.flowday.core.domain.model.FocusSession
-import dev.flowday.core.domain.repository.SessionRepository
-import dev.flowday.core.domain.usecases.GetTodayFocusTimeUseCase
+import dev.flowday.domain.model.FocusSession
+import dev.flowday.domain.repository.SessionRepository
+import dev.flowday.domain.usecases.GetTodayFocusTimeUseCase
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
@@ -15,6 +15,17 @@ class GetTodayFocusTimeUseCaseTest {
 
     private lateinit var repository: SessionRepository
     private lateinit var getTodayFocusTime: GetTodayFocusTimeUseCase
+
+    private fun fakeSession(
+        id: Long = 1L,
+        durationSeconds: Long = 1500L,
+        isActive: Boolean = false,
+    ) = FocusSession(
+        id = id,
+        startedAt = Instant.now(),
+        endedAt = if (isActive) null else Instant.now(),
+        durationInSeconds = durationSeconds,
+    )
 
     @Before
     fun setup() {
@@ -81,15 +92,4 @@ class GetTodayFocusTimeUseCaseTest {
             awaitComplete()
         }
     }
-
-    private fun fakeSession(
-        id: Long = 1L,
-        durationSeconds: Long = 1500L,
-        isActive: Boolean = false,
-    ) = FocusSession(
-        id = id,
-        startedAt = Instant.now(),
-        endedAt = if (isActive) null else Instant.now(),
-        durationInSeconds = durationSeconds,
-    )
 }

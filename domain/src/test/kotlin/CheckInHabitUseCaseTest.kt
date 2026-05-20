@@ -1,5 +1,5 @@
-import dev.flowday.core.domain.repository.HabitRepository
-import dev.flowday.core.domain.usecases.CheckInHabitUseCase
+import dev.flowday.domain.repository.HabitRepository
+import dev.flowday.domain.usecases.CheckInHabitUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
 import junit.framework.TestCase.assertTrue

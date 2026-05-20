@@ -1,8 +1,8 @@
 import app.cash.turbine.test
-import dev.flowday.core.domain.model.FocusSession
-import dev.flowday.core.domain.repository.SessionRepository
-import dev.flowday.core.domain.usecases.GetTodayFocusTimeUseCase
-import dev.flowday.core.domain.usecases.StartSessionUseCase
+import dev.flowday.domain.model.FocusSession
+import dev.flowday.domain.repository.SessionRepository
+import dev.flowday.domain.usecases.GetTodayFocusTimeUseCase
+import dev.flowday.domain.usecases.StartSessionUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -20,6 +20,19 @@ class StartSessionUseCaseTest {
     private lateinit var repository: SessionRepository
     private lateinit var startSession: StartSessionUseCase
     private lateinit var getTodayFocusTime: GetTodayFocusTimeUseCase
+
+    // Helper — builds a fake FocusSession for tests
+    // Lives in the test file, not in main — test data never ships to production
+    private fun fakeSession(
+        id: Long = 1L,
+        durationSeconds: Long = 1500L,
+        isActive: Boolean = false,
+    ) = FocusSession(
+        id = id,
+        startedAt = Instant.now(),
+        endedAt = if (isActive) null else Instant.now(),
+        durationInSeconds = durationSeconds,
+    )
 
     @Before
     fun setup() {
@@ -88,16 +101,4 @@ class StartSessionUseCaseTest {
     }
 
 
-    // Helper — builds a fake FocusSession for tests
-    // Lives in the test file, not in main — test data never ships to production
-    private fun fakeSession(
-        id: Long = 1L,
-        durationSeconds: Long = 1500L,
-        isActive: Boolean = false,
-    ) = FocusSession(
-        id = id,
-        startedAt = Instant.now(),
-        endedAt = if (isActive) null else Instant.now(),
-        durationInSeconds = durationSeconds,
-    )
 }

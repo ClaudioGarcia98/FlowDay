@@ -1,5 +1,5 @@
-import dev.flowday.core.domain.repository.SessionRepository
-import dev.flowday.core.domain.usecases.EndSessionUseCase
+import dev.flowday.domain.repository.SessionRepository
+import dev.flowday.domain.usecases.EndSessionUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
 import junit.framework.TestCase.assertTrue

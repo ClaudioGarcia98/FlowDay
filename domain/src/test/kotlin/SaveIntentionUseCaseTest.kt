@@ -1,5 +1,5 @@
-import dev.flowday.core.domain.repository.IntentionRepository
-import dev.flowday.core.domain.usecases.SaveIntentionUseCase
+import dev.flowday.domain.repository.IntentionRepository
+import dev.flowday.domain.usecases.SaveIntentionUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
 import junit.framework.TestCase.assertTrue
