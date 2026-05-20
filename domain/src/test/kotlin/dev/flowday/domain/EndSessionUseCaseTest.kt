@@ -1,3 +1,5 @@
+package dev.flowday.domain
+
 import dev.flowday.domain.repository.SessionRepository
 import dev.flowday.domain.usecases.EndSessionUseCase
 import io.mockk.coEvery

@@ -1,3 +1,5 @@
+package dev.flowday.domain
+
 import app.cash.turbine.test
 import dev.flowday.domain.model.FocusSession
 import dev.flowday.domain.repository.SessionRepository

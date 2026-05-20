@@ -1,3 +1,5 @@
+package dev.flowday.domain
+
 import dev.flowday.domain.repository.IntentionRepository
 import dev.flowday.domain.usecases.SaveIntentionUseCase
 import io.mockk.coEvery

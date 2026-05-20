@@ -1,3 +1,5 @@
+package dev.flowday.domain
+
 import dev.flowday.domain.repository.HabitRepository
 import dev.flowday.domain.usecases.CheckInHabitUseCase
 import io.mockk.coEvery
