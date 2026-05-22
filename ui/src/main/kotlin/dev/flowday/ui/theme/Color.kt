@@ -3,8 +3,11 @@ package dev.flowday.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Brand
-val Blue600 = Color(0xFF2563EB)
+val Blue700 = Color(0xFF1A3FD4)
+val Blue600 = Color(0xFF1E4FE8)
+val Blue500 = Color(0xFF3B7DE8)
 val Blue400 = Color(0xFF60A5FA)
+val Blue200 = Color(0xFF93C5FD)
 
 // Neutrals
 val Neutral950 = Color(0xFF0A0A0F)

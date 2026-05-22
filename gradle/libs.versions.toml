@@ -20,6 +20,7 @@ material = "1.14.0"
 retrofit = "3.0.0"
 okhttp = "4.12.0"
 kotlinxSerializationJson = "1.11.0"
+splashscreen = "1.0.1"
 
 #explanation of this dependency here "https://youtrack.jetbrains.com/issue/KTIJ-31549"
 annotation-experimental = "1.6.0"
@@ -57,7 +58,9 @@ okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-i
 okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+
 
 #explanation of this dependency here "https://youtrack.jetbrains.com/issue/KTIJ-31549"
 androidx-annotation-experimental = { group = "androidx.annotation", name = "annotation-experimental", version.ref = "annotation-experimental" }
