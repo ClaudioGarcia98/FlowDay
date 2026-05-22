@@ -3,6 +3,12 @@
 > Most productivity apps track what you did.  
 > FlowDay starts with what you *intend* to do — then helps you follow through.
 
+
+Mockups of the app screens "can change"
+
+| Light Mode | Dark Mode |
+| :-: | :-: |
+| <img src="Mockups/home_screen_light" width="260" /> | <img src="Mockups/home_screen_dark.png" width="260" /> |
 ---
 
 ## What is FlowDay
