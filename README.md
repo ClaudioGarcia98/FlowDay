@@ -22,11 +22,33 @@ No cloud sync · No social features · No gamification · No AI · No calendar i
 
 **Focus sessions** — Start a timer when you sit down to do deep work. The timer keeps running even when the app is closed or the phone is locked. Label each session. At the end of the day see exactly how much time you actually focused.
 
-**Daily intention** — Every morning write your 1 to 3 priorities for the day. Not a todo list — intentions. What actually matters today. In the evening do a quick review: did you follow through? One line of reflection closes the loop between what you planned and what you did.
+**Daily intention** — Write your 1 to 3 priorities for the day. Not a todo list — intentions. What actually matters today. In the evening do a quick review: did you follow through? One line of reflection closes the loop between what you planned and what you did.
 
-**Habits** — A small set of daily habits you want to maintain. One tap to check in each day. Streak tracking and a visual history grid show your consistency over weeks at a glance. A daily notification reminds you to check in.
+**Habits** — A set of daily habits you want to maintain. One tap to check in each day. Streak tracking and a monthly calendar view show your consistency at a glance. A daily notification reminds you to check in.
 
 **Analytics** — A weekly dashboard showing focus hours per day, habit completion consistency, your best focus day, and your streaks. Drawn natively with Compose Canvas — no third-party chart library.
+
+---
+
+## Screens
+
+FlowDay has four main destinations accessible via the bottom navigation bar (or navigation rail / drawer on larger screens):
+
+**Home** — Today's overview. Shows current weather, today's intentions, a quick start focus session button, and today's habit progress. The screen adapts to what the user has actually done: prompts to set intentions if none exist, and prompts for an evening reflection once intentions are set but reflection is missing. Intention detail and evening reflection are accessed from this screen.
+
+**Session** — Focus timer screen. Shows elapsed time, session label input, start/pause/stop controls, and today's focus summary (total time + session count).
+
+**Habits** — Today's progress bar, habit list with one-tap check-in and streak display, and a monthly calendar showing check-in history. Checked days in blue, partial days in lighter blue, today outlined.
+
+**Analytics** — Weekly dashboard with week navigation. Bar chart of focus hours per day, total focus time and best day summary cards, habit consistency ring, and streak list per habit.
+
+### Navigation
+
+- Phone → `NavigationBar` (bottom)
+- Tablet portrait → `NavigationRail` (side)
+- Tablet landscape → `NavigationDrawer` (side panel)
+
+Navigation adapts automatically using `WindowSizeClass`.
 
 ---
 
@@ -50,9 +72,24 @@ FlowDay/
     └── analytics/         Analytics dashboard screen
 ```
 
-### Why `:domain` is pure Kotlin
+### Dependency direction
 
-`:domain` has zero Android dependencies. Every business rule — use cases, validation logic — runs on the JVM in under 3 seconds without an emulator. The domain layer defines what the app needs through repository interfaces. The implementation of those interfaces lives in `:data` — domain never knows how data is fetched, only that it can be.
+```
+:app → :feature:* → :ui → (nothing)
+:app → :feature:* → :domain
+:data → :domain
+:data → :database
+:data → :network
+```
+
+`:ui` depends on nothing. Features depend on `:ui` and `:domain`. `:app` wires everything together.
+
+### What `:ui` contains
+
+| Package       | Purpose                                                        |
+|---------------|----------------------------------------------------------------|
+| `theme/`      | `Color.kt`, `Type.kt`, `Theme.kt` — FlowDay design system     |
+| `component/`  | Shared Compose components used across multiple feature screens |
 
 ### What `:domain` contains
 
@@ -72,21 +109,41 @@ FlowDay/
 
 ---
 
+## Design system
+
+**Font** — Inter (static, 4 weights: Regular 400, Medium 500, SemiBold 600, Bold 700)
+
+**Color palette** — Custom FlowDay palette, dark and light. No dynamic color — the app has a deliberate visual identity.
+
+**Theme** — `FlowDayTheme` wraps `MaterialTheme` with the FlowDay color scheme and typography. Applied at the root in `MainActivity`.
+
+**Splash screen** — Uses `androidx.core:core-splashscreen`. Background adapts to device theme — `#F8F8FC` in light mode, `#0A0A0F` in dark mode. Implemented via `values/themes.xml` and `values-night/themes.xml`.
+
+---
+
 ## Architecture decisions
 
-**Weather caching** — Weather is fetched once per day and cached in Room using the date as the primary key. Weather serves as context on the Daily Intention screen, not a real-time feed. Once per day is sufficient and avoids unnecessary network calls.
+**Weather caching** — Weather is fetched once per day and cached in Room using the date as the primary key. Weather serves as context on the Home screen, not a real-time feed. Once per day is sufficient and avoids unnecessary network calls.
 
 **JSON storage for priorities** — `DailyIntention` stores its `priorities` field as a JSON string in Room via a TypeConverter. Acceptable here because priorities are capped at 3 short strings. For larger datasets this would be replaced with a separate relational table.
+
+**3 priority limit** — `SaveIntentionUseCase` enforces a maximum of 3 priorities. This is intentional — the constraint forces the user to decide what actually matters today, rather than dumping everything into a list. FlowDay is not a todo app.
 
 **Database migrations** — The app currently uses `fallbackToDestructiveMigration()` during development. There are no real users and no data worth preserving. Before any public release this will be replaced with explicit `Migration` objects.
 
 **`:data` uses `android.library` not `kotlin.jvm`** — `:domain` is pure Kotlin. `:data` cannot be the same because Hilt requires the Android runtime — any module using Hilt must be an Android library module.
+
+**`:ui` uses `android.library`** — Compose requires the Android runtime, so `:ui` cannot be a pure Kotlin module.
 
 **Shared weather code mapping** — `mapWeatherCodeToCondition(code: Int)` is extracted as a standalone function in `:network`. Both the network mapper and the database cache mapper in `:data` need the same logic — extracting it avoids duplication without creating a new shared module or violating dependency direction.
 
 **Analytics computed entirely in memory** — `AnalyticsRepositoryImpl` fetches all sessions and check-ins and filters them in memory per week. The dataset is local-only and bounded — a user will never accumulate enough data to make this a performance problem. Keeps the DAO layer simple and avoids over-engineering.
 
 **`saveEveningReflection` fetches before upserting** — `IntentionDao` uses `@Upsert`. Saving a reflection for a date that already has priorities would wipe those priorities if the entity were reconstructed from scratch. The method fetches the existing entity first, copies it with the new reflection, and upserts. If no intention exists for that date, the operation is a no-op.
+
+**Adaptive navigation** — The navigation component adapts to screen size using `WindowSizeClass`. Phone uses `NavigationBar`, tablet portrait uses `NavigationRail`, tablet landscape uses `NavigationDrawer`. This lives in `:ui/component/` as a shared component.
+
+**Habits history — monthly calendar** — The habits screen shows a monthly calendar instead of a GitHub-style contribution grid. A grid requires explanation; a calendar is universally understood. Checked days are highlighted in blue, partial days in lighter blue, today is outlined.
 
 ---
 
@@ -121,17 +178,17 @@ Workflow file: `.github/workflows/ci.yml`
 
 ## Project status
 
-| Module            | Status        |
-|-------------------|---------------|
-| `:domain`         | ✅ Complete    |
-| `:database`       | ✅ Complete    |
-| `:network`        | ✅ Complete    |
-| `:data`           | ✅ Complete    |
-| CI (GitHub Actions) | ✅ Complete  |
-| `:ui`             | ⬜ Not started |
-| `:feature:session`   | ⬜ Not started |
-| `:feature:habits`    | ⬜ Not started |
-| `:feature:analytics` | ⬜ Not started |
+| Module               | Status           |
+|----------------------|------------------|
+| `:domain`            | ✅ Complete       |
+| `:database`          | ✅ Complete       |
+| `:network`           | ✅ Complete       |
+| `:data`              | ✅ Complete       |
+| CI (GitHub Actions)  | ✅ Complete       |
+| `:ui`                | 🔄 In progress   |
+| `:feature:session`   | ⬜ Not started    |
+| `:feature:habits`    | ⬜ Not started    |
+| `:feature:analytics` | ⬜ Not started    |
 
 ---
 
@@ -144,6 +201,13 @@ cd FlowDay
 ```
 
 **Requirements:** Android Studio Meerkat · JDK 17 · Android API 26+
+
+---
+
+## Known limitations / future improvements
+
+- `fallbackToDestructiveMigration()` will be replaced with explicit migrations before public release
+- Intention slots are capped at 3 per day — v2 will unlock additional slots of 3 when all current intentions are completed, rewarding follow-through
 
 ---
 
