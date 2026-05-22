@@ -5,7 +5,7 @@
 
 Mockups of the app screens "can change"
 
-| Light Mode | Dark Mode |
+| Home Screen Light Mode | Home Screen Dark Mode |
 | :-: | :-: |
 | <img src="Mockups/home_screen_light.png" width="260" /> | <img src="Mockups/home_screen_dark.png" width="260" /> |
 
