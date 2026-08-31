@@ -21,7 +21,7 @@ FlowDay is a local-first personal productivity app built around three daily ques
 
 **Focus sessions** — foreground timer that runs in background, label sessions, persistent notification with pause/stop actions.
 
-**Daily intention** — morning priorities (max 3), evening reflection closes the loop. Shows current weather context (temperature + condition) fetched once per day via Open-Meteo and cached locally in Room.
+**Daily intention** — priorities (max 3 per day), evening reflection closes the loop. Accessed from the Home screen.
 
 **Habits** — daily check-ins, streak tracking, visual history grid, WorkManager daily reminder notification.
 
@@ -88,6 +88,16 @@ FlowDay/
 :feature:analytics
 ```
 
+### Dependency direction
+
+```
+:app → :feature:* → :ui
+:app → :feature:* → :domain
+:data → :domain + :database + :network
+```
+
+`:ui` depends on nothing. Features depend on `:ui` and `:domain`. `:app` wires everything together. Nothing depends on `:app`.
+
 ---
 
 ## Module Status
@@ -99,16 +109,166 @@ FlowDay/
 | `:network`           | ✅ Complete      |
 | `:data`              | ✅ Complete      |
 | CI (GitHub Actions)  | ✅ Complete      |
-| `:ui`                | ⬜ Not started   |
+| `:ui`                | 🔄 In progress  |
 | `:feature:session`   | ⬜ Not started   |
 | `:feature:habits`    | ⬜ Not started   |
 | `:feature:analytics` | ⬜ Not started   |
 
 ---
 
+## Screens & Navigation
+
+### Bottom navigation destinations (4)
+
+- **Home** — today's overview
+- **Session** — focus timer
+- **Habits** — daily check-ins + streaks
+- **Analytics** — weekly dashboard
+
+### Adaptive navigation
+
+| Screen size | Component |
+|-------------|-----------|
+| Compact (phone) | `NavigationBar` (bottom) |
+| Medium (tablet portrait / foldable) | `NavigationRail` (side) |
+| Expanded (tablet landscape) | `NavigationDrawer` (side panel) |
+
+Implemented using `WindowSizeClass`. Lives in `:ui/component/` as a shared component.
+
+### Home screen
+
+The home screen adapts to what the user has actually done — not the time of day:
+
+- **No intentions set** → show weather + prompt to set intentions + quick start session + habit progress
+- **Intentions set, no reflection** → show weather + intentions + prompt for evening reflection + quick start session + habit progress
+- **Intentions set + reflection done** → show weather + intentions + reflection + focus summary + habit progress
+
+Intention detail and evening reflection are accessed from the Home screen, not a separate nav destination.
+
+### Intention design decision
+
+Priorities are capped at 3 per day — enforced in `SaveIntentionUseCase`. This is intentional: the constraint forces the user to decide what actually matters, not dump everything into a list. FlowDay is not a todo app.
+
+**v2 feature (planned):** When all 3 intentions are completed, the app unlocks an additional slot of 3. Rewards follow-through without removing the discipline of the limit.
+
+---
+
+
+### Session screen
+
+- Large timer display (elapsed time)
+- Session label input field — "What are you working on?"
+- Three controls: reset (secondary), play/pause (primary blue), stop (secondary)
+- Today's focus summary below — total time + session count
+
+### Habits screen
+
+- Today's progress bar at top — "X of Y habits done"
+- Habit list — each card has emoji icon, name, streak, tap to check in
+  - Checked state: filled blue circle with checkmark
+  - Unchecked state: empty circle with border
+- Monthly calendar section below the list
+  - Checked days: filled blue circle
+  - Partial days (some habits done): lighter blue circle
+  - Today: outlined in blue
+  - Navigation arrows to go between months
+
+### Analytics screen
+
+- Week selector with back/forward navigation
+- Bar chart — focus hours per day of the week (Mon–Sun), best day highlighted in darker blue
+- Two summary cards side by side — total focus time this week + best day
+- Habit consistency ring — percentage of habits completed this week
+- Streak list — each habit with current streak (🔥) and personal best
+
+---
+
+## :ui — In Progress
+
+**Package:** `dev.flowday.ui`
+**Plugin:** `android.library` + `kotlin.compose`
+
+### Structure
+
+```
+dev.flowday.ui/
+├── theme/
+│   ├── Color.kt       — FlowDay color palette
+│   ├── Type.kt        — Inter font family + typography scale
+│   └── Theme.kt       — FlowDayTheme (dark + light, no dynamic color)
+└── component/         — shared Compose components (adaptive nav, etc.)
+```
+
+### Font
+
+Inter — static `.ttf` files, 4 weights:
+- `inter_regular.ttf` — FontWeight.Normal (400)
+- `inter_medium.ttf` — FontWeight.Medium (500)
+- `inter_semibold.ttf` — FontWeight.SemiBold (600)
+- `inter_bold.ttf` — FontWeight.Bold (700)
+
+### Color palette
+
+```kotlin
+// Brand — updated to match app logo (richer, deeper blue)
+Blue700 = Color(0xFF1A3FD4)   // dark primary container
+Blue600 = Color(0xFF1E4FE8)   // light primary
+Blue500 = Color(0xFF3B7DE8)   // mid accent
+Blue400 = Color(0xFF60A5FA)   // dark primary
+Blue200 = Color(0xFF93C5FD)   // lightest accent
+
+// Neutrals
+Neutral950 = Color(0xFF0A0A0F)
+Neutral900 = Color(0xFF111118)
+Neutral800 = Color(0xFF1C1C27)
+Neutral700 = Color(0xFF2A2A38)
+Neutral300 = Color(0xFFB0B0C8)
+Neutral200 = Color(0xFFD4D4E8)
+Neutral100 = Color(0xFFF0F0F8)
+Neutral50  = Color(0xFFF8F8FC)
+
+// Semantic
+Success = Color(0xFF22C55E)
+Warning = Color(0xFFF59E0B)
+Error   = Color(0xFFEF4444)
+```
+
+### Theme
+
+`FlowDayTheme` wraps `MaterialTheme` with custom color schemes for dark and light mode. Dynamic color disabled — FlowDay has a deliberate visual identity. Applied at the root in `MainActivity`.
+
+Light scheme: `primary = Blue600`, `onPrimary = Neutral50`, `primaryContainer = Blue200`
+Dark scheme: `primary = Blue400`, `onPrimary = Neutral950`, `primaryContainer = Blue700`
+
+### Splash screen
+
+- Library: `androidx.core:core-splashscreen`
+- Icon: `ic_splash_logo` (Gemini-generated PNG, AI-generated original asset)
+- Background: `#F8F8FC` (light) / `#0A0A0F` (dark) — adapts to device theme via `values/themes.xml` + `values-night/themes.xml`
+- `installSplashScreen()` called before `super.onCreate()` in `MainActivity`
+- Two XML themes: `Theme.FlowDay` (app theme) + `Theme.FlowDay.Splash` (splash only)
+- Activity uses `Theme.FlowDay.Splash` in `AndroidManifest.xml`
+
+### App icon
+
+- Gemini-generated logo — flowing loops + upward arrow + sun burst, FlowDay blue palette
+- Background removed via remove.bg for transparent PNG
+- Generated all density variants via Android Studio Image Asset tool
+- Adaptive icon with `#F8F8FC` background layer
+
+### Key decisions
+
+- No dynamic color — app has intentional visual identity
+- Inter chosen for modern, readable feel matching "motivated, clean, relaxed, beautiful" mood
+- Blue palette updated to richer, deeper blue to match logo energy and vibrancy
+- `:ui` depends on nothing — no `:domain`, no `:data`, no other FlowDay module
+- Font preview error in Android Studio is a known limitation with font resources in library modules — the app itself runs correctly
+- Habits history uses monthly calendar instead of GitHub-style grid — universally understood without explanation
+---
+
 ## :domain — Complete
 
-**Package:** `dev.flowday.domain`  
+**Package:** `dev.flowday.domain`
 **Plugin:** `id("org.jetbrains.kotlin.jvm")` — pure Kotlin, zero Android imports
 
 ### Models
@@ -227,7 +387,7 @@ SaveIntentionUseCaseTest
 
 ## :database — Complete
 
-**Package:** `dev.flowday.database`  
+**Package:** `dev.flowday.database`
 **Plugins:** `android.library` + `ksp` + `hilt` + `room`
 
 ### Entities
@@ -269,8 +429,8 @@ WeatherCacheEntity          table: weather_cache
 
 ### Database Version
 
-Current version: **4**  
-Version 4 added `WeatherCacheEntity` for weather caching.  
+Current version: **4**
+Version 4 added `WeatherCacheEntity` for weather caching.
 `fallbackToDestructiveMigration()` used during development — must be replaced with proper `Migration` objects before any public release.
 
 ### DAOs
@@ -362,12 +522,12 @@ IntentionDaoTest    — upsert behaviour · query by date
 
 ## :network — Complete
 
-**Package:** `dev.flowday.network`  
+**Package:** `dev.flowday.network`
 **Plugins:** `android.library` + `ksp` + `hilt` + `kotlin-serialization`
 
 ### Purpose
 
-Fetches current weather from Open-Meteo and surfaces it as context on the Daily Intention screen. Demonstrates a full production-grade network layer for portfolio and interviews.
+Fetches current weather from Open-Meteo and surfaces it as context on the Home screen. Demonstrates a full production-grade network layer for portfolio and interviews.
 
 **Why weather?** Fits the local-first philosophy — network is additive, not required. The app works fully offline; weather is a nice-to-have context layer that forces real implementation of every network pattern interviewers look for.
 
@@ -435,201 +595,65 @@ fun mapWeatherCodeToCondition(code: Int): WeatherCondition
 object NetworkModule
     @Provides @Singleton provideOkHttpClient(): OkHttpClient   // HttpLoggingInterceptor.Level.BODY
     @Provides @Singleton provideRetrofit(okHttpClient): Retrofit  // base URL: api.open-meteo.com
-    @Provides provideWeatherApiService(retrofit): WeatherApiService
+    @Provides @Singleton provideWeatherApiService(retrofit): WeatherApiService
 ```
 
-### Caching strategy
-
-- Weather fetched once per day maximum
-- Cached in Room (`WeatherCacheEntity` with `dateIso` as primary key)
-- On app open: serve cache if fetched today, otherwise fetch fresh
-- If fetch fails and cache exists: serve stale cache silently
-- If fetch fails and no cache: emit null, app continues normally
-
-### Key Decisions
-
-- `mapWeatherCodeToCondition()` extracted as a standalone package-level function — `:data` needs the same mapping logic for `WeatherCacheEntity → Weather` conversion; extracting avoids duplication without creating a shared module outside the existing architecture
-
-### Tests — All Passing
+### Network Tests — All Passing
 
 ```
+WeatherApiServiceTest (MockWebServer)
+    returns weather response on success
+    throws exception on network error
+    throws exception on malformed JSON
+
 WeatherMapperTest
-    maps temperature correctly
-    maps condition CLEAR_SKY correctly
-    maps condition PARTLY_CLOUDY correctly
-    maps condition FOG correctly
-    maps condition RAIN correctly
-    maps condition SNOW correctly
-    maps condition SHOWERS correctly
-    maps condition THUNDERSTORM correctly
-    maps condition UNKNOWN correctly
-
-WeatherApiServiceTest
-    returns correct data in a 200 status code
-    returns error on 500 response
-    returns UNKNOWN condition on malformed JSON
+    maps clear sky code correctly
+    maps unknown code to UNKNOWN
+    maps all condition codes correctly
 ```
 
 ---
 
 ## :data — Complete
 
-**Package:** `dev.flowday.data`  
-**Plugins:** `android.library` + `ksp` + `hilt` + `kotlin-serialization`
-
-### Purpose
-
-Implements the repository interfaces defined in `:domain`. Sits between the domain layer and the data sources (`:database`, `:network`). Contains mappers to convert entities and DTOs to domain models.
-
-### Dependencies
-
-- `:domain` — repository interfaces and domain models
-- `:database` — DAOs and entities
-- `:network` — WeatherApiService and mapWeatherCodeToCondition
+**Package:** `dev.flowday.data`
+**Plugins:** `android.library` + `hilt`
 
 ### Structure
 
 ```
 data/
-├── di/
-│   └── DataModule.kt               // Hilt — binds repository interfaces to implementations
 ├── mapper/
-│   ├── SessionMapper.kt            // FocusSessionEntity → FocusSession
-│   ├── HabitMapper.kt              // HabitEntity → Habit · HabitCheckInEntity → HabitCheckIn
-│   ├── IntentionMapper.kt          // DailyIntentionEntity → DailyIntention
-│   └── WeatherMapper.kt            // WeatherCacheEntity → Weather
-└── repository/
-    ├── SessionRepositoryImpl.kt
-    ├── HabitRepositoryImpl.kt
-    ├── IntentionRepositoryImpl.kt
-    ├── AnalyticsRepositoryImpl.kt
-    └── WeatherRepositoryImpl.kt
-```
-
-### Mappers
-
-```kotlin
-// SessionMapper.kt
-fun FocusSessionEntity.toFocusSession(): FocusSession
-// Long → Instant via Instant.ofEpochSecond()
-// endedAt nullable — uses ?.let { Instant.ofEpochSecond(it) }
-
-// HabitMapper.kt
-fun HabitEntity.toHabit(): Habit
-// createdAtEpochSecond dropped — not in domain model
-// currentStreak and longestStreak hardcoded to 0 — computed at runtime, never stored
-
-fun HabitCheckInEntity.toHabitCheckIn(): HabitCheckIn
-// dateIso String → LocalDate via LocalDate.parse()
-// completedAtEpochSecond Long → Instant via Instant.ofEpochSecond()
-
-// IntentionMapper.kt
-fun DailyIntentionEntity.toDailyIntention(): DailyIntention
-// id hardcoded to 0L — dateIso is the entity primary key, domain model has id: Long = 0
-// prioritiesJson String → List<String> via Json.decodeFromString()
-// dateIso String → LocalDate via LocalDate.parse()
-
-// WeatherMapper.kt
-fun WeatherCacheEntity.toWeather(): Weather
-// weatherCode Int → WeatherCondition via mapWeatherCodeToCondition() from :network
-```
-
-### Repository Implementations
-
-```kotlin
-SessionRepositoryImpl(private val sessionDao: SessionDao)
-// getSessionsStream — Flow map + toFocusSession()
-// getTodaySessionStream — calculates startOfDayEpoch via LocalDate.now().atStartOfDay(ZoneOffset.UTC)
-// getActiveSession — nullable entity mapped with ?.toFocusSession()
-// startSession — builds FocusSessionEntity with Instant.now().epochSecond, inserts via DAO
-// endSession — calls DAO with Instant.now().epochSecond as endTime
-// deleteSession — delegates directly to DAO
-
-HabitRepositoryImpl(private val habitDao: HabitDao)
-// LocalDate → String via date.toString() for all DAO calls
-// createHabit — builds HabitEntity with Instant.now().epochSecond
-// checkIn — builds HabitCheckInEntity with date.toString() and Instant.now().epochSecond
-// undoCheckIn — delegates to DAO with date.toString()
-
-IntentionRepositoryImpl(private val intentionDao: IntentionDao)
-// savePriorities — serializes List<String> to JSON via Json.encodeToString()
-// saveEveningReflection — fetches existing entity via getIntentionForDateOnce(),
-//   copies with new reflection via .copy(), returns early if no existing intention
-
-AnalyticsRepositoryImpl(private val sessionDao: SessionDao, private val habitDao: HabitDao)
-// getWeeklyStatsStream — combines three Flows: sessions + checkIns + habits
-//   weekStarts computed outside combine — (0 until weeksBack).map { today.minusWeeks(it).with(MONDAY) }
-//   sessions and checkIns filtered per week by epoch range and LocalDate range respectively
-//   habitCompletionRate = weekCheckIns.size / (habits.size * 7), guarded against empty habits
-//   bestFocusDay — groupBy DayOfWeek, sumOf durationSeconds, maxByOrNull, weekStart.with(bestDayOfWeek)
-// getTotalFocusSecondsStream — filters completed sessions, sumOf durationSeconds
-
-WeatherRepositoryImpl(private val weatherDao: WeatherDao, private val weatherApiService: WeatherApiService)
-// serves cache if dateIso == today
-// on miss: fetches from network, caches result, returns domain model
-// on network failure: returns stale cache or null
+│   ├── SessionMapper.kt
+│   ├── HabitMapper.kt
+│   ├── IntentionMapper.kt
+│   └── WeatherMapper.kt
+├── repository/
+│   ├── SessionRepositoryImpl.kt
+│   ├── HabitRepositoryImpl.kt
+│   ├── IntentionRepositoryImpl.kt
+│   ├── AnalyticsRepositoryImpl.kt
+│   └── WeatherRepositoryImpl.kt
+└── di/
+    └── DataModule.kt              // @Binds abstract class
 ```
 
 ### Key Decisions
 
-- `android.library` plugin instead of `kotlin.jvm` — Hilt requires the Android runtime
-- No Room, Retrofit, or Serialization direct dependencies — those are encapsulated in `:database` and `:network`; `:data` only depends on the module. Serialization is an exception because `IntentionRepositoryImpl` serializes priorities to JSON directly
-- `LocalDate.toString()` for date → String conversion — produces ISO format `"2025-05-12"` by default, matching the format stored in the database
-- `Instant.now().epochSecond` for timestamps — consistent with how entities store time throughout the project
-- Streak fields hardcoded to 0 in `HabitMapper` — streaks are computed at runtime from check-ins, never stored; the mapper has no access to check-in history
-- `id = 0L` in `IntentionMapper` — `DailyIntentionEntity` uses `dateIso` as primary key; the domain model has `id: Long = 0` as a default
-- `combine` with three Flows in `AnalyticsRepositoryImpl` — analytics computation requires sessions, check-ins, and habit count simultaneously; `combine` re-emits whenever any source changes
-- All check-ins fetched in memory for analytics — dataset is local-only and bounded; acceptable for this use case
-- `saveEveningReflection` fetches before upserting — preserves priorities written earlier in the day
-- `result ?: return` early exit in `saveEveningReflection` — if no intention exists for the date, silently doing nothing is the correct behaviour
+- `DataModule` uses abstract class with `@Binds` — more efficient than `@Provides` for interface binding
+- `AnalyticsRepositoryImpl` uses `combine` across three Flows — sessions, check-ins, habits — computed in memory
+- `WeatherRepositoryImpl` uses cache-first strategy — returns cached weather if today's cache exists, otherwise fetches from network
+- `IntentionRepositoryImpl` uses Kotlin Serialization for JSON priorities
+- `saveEveningReflection` fetches existing entity before upserting — prevents wiping priorities
 
 ### Tests — All Passing
 
 ```
-Mapper Tests
-    SessionMapperTest       — entity → domain model · Long → Instant conversion
-    HabitMapperTest         — HabitEntity → Habit · HabitCheckInEntity → HabitCheckIn · streak hardcoded to 0
-    IntentionMapperTest     — prioritiesJson → List<String> · dateIso → LocalDate · id hardcoded to 0L
-    WeatherMapperTest       — weatherCode → WeatherCondition via mapWeatherCodeToCondition()
-
-Repository Tests
-    SessionRepositoryImplTest (6 tests)
-        getSessionsStream returns mapped sessions
-        getTodaySessionsStream returns today sessions
-        getActiveSession returns null when no active session
-        getActiveSession returns mapped active session
-        startSession calls dao with correct entity
-        deleteSession delegates to dao
-
-    HabitRepositoryImplTest (7 tests)
-        getHabitsStream returns mapped habits
-        getCheckInsForDate returns mapped check-ins
-        getCheckInsForHabit returns mapped check-ins
-        createHabit calls dao with correct entity
-        checkIn calls dao with correct entity
-        undoCheckIn delegates to dao with date string
-        deleteHabit delegates to dao
-
-    IntentionRepositoryImplTest (5 tests)
-        getIntentionForDate returns today mapped intention
-        getIntentionForDate returns null when dao emits null
-        savePriorities calls dao with correct entity
-        saveEveningReflection calls dao with updated reflection
-        saveEveningReflection does nothing when no intention exists
-
-    WeatherRepositoryImplTest (4 tests)
-        cache exists and is today returns cached weather
-        cache miss fetches from network inserts entity returns mapped weather
-        network fails stale cache exists returns stale cache
-        network fails no cache returns null
-
-    AnalyticsRepositoryImplTest (6 tests)
-        returns correct sum of completed sessions
-        returns 0 when no sessions are completed
-        returns correct WeeklyStats for a week with sessions and check-ins
-        returns 0 habit completion rate when no habits exist
-        sessions outside the week are excluded
-        best focus day is the day with most focus seconds
+SessionRepositoryImplTest (5 tests)
+HabitRepositoryImplTest (7 tests)
+IntentionRepositoryImplTest (5 tests)
+WeatherRepositoryImplTest (4 tests)
+AnalyticsRepositoryImplTest (6 tests)
 ```
 
 ---
@@ -745,6 +769,7 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 - `ksp()` used for Room compiler and Hilt compiler — not `implementation()`
 - `:domain` uses `kotlin.jvm` plugin — NOT `android.library`
 - `:data` uses `android.library` — required by Hilt
+- `:ui` uses `android.library` + `kotlin.compose` — Compose requires Android runtime
 
 ### gradle.properties — performance settings
 
@@ -788,12 +813,13 @@ feature/claudio/domain-tests      → merged to develop
 feature/claudio/core-database     → merged to develop
 feature/claudio/core-network      → merged to develop
 feature/claudio/start-data-module → merged to develop (includes CI setup)
+feature/claudio/core-data         → merged to develop
 ```
 
 ### Current branch
 
 ```
-feature/claudio/core-data   ← in progress
+feature/claudio/ui-module   ← in progress (screens designed, theme complete, splash screen done)
 ```
 
 ---

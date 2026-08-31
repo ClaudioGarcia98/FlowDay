@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "dev.flowday.core.data"
+    namespace = "dev.flowday.data"
     compileSdk = 36
 
     defaultConfig {

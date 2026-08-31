@@ -10,7 +10,7 @@ room {
 }
 
 android {
-    namespace = "dev.flowday.core.database"
+    namespace = "dev.flowday.database"
     compileSdk = 36
 
     defaultConfig {

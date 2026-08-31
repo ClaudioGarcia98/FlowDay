@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "dev.flowday.core.network"
+    namespace = "dev.flowday.network"
     compileSdk = 36
 
 
